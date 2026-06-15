@@ -133,6 +133,27 @@ describe('external nodes callback service', () => {
         expect(missingResponse.status).toBe(410);
     });
 
+    it('can serve cached callback nodes as base64 for subconverter remote URL fetches', async () => {
+        const secret = 'unit-test-secret';
+        const nodeHash = 'd'.repeat(64);
+        const token = await createExternalNodesToken({ profileId: 'profile-a', nodeHash, secret, expiresInSeconds: 120 });
+        const cacheKey = buildExternalNodesCacheKey('profile-a', nodeHash);
+        const kv = {
+            get: vi.fn(async (key) => key === cacheKey ? 'ss://node-a#A\nss://node-b#B\n' : null),
+            put: vi.fn(async () => undefined),
+            delete: vi.fn(async () => undefined)
+        };
+
+        const response = await handleExternalNodesCallbackRequest(
+            new Request('https://misub.example/api/external-nodes-callback?token=' + token + '&encoding=base64'),
+            { MISUB_KV: kv, CALLBACK_TOKEN_SECRET: secret }
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get('X-MiSub-Callback-Encoding')).toBe('base64');
+        expect(await response.text()).toBe(btoa('ss://node-a#A\nss://node-b#B\n'));
+    });
+
     it('uses auto-detected KV bindings for callback nodes across requests', async () => {
         const nodesText = 'ss://auto-kv-node#A\n';
         const kvData = new Map();

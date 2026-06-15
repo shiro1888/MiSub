@@ -30,6 +30,17 @@ function bytesToBase64Url(bytes) {
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
+function encodeUtf8Base64(text) {
+    const bytes = new TextEncoder().encode(String(text || ''));
+    let binary = '';
+    bytes.forEach(byte => {
+        binary += String.fromCharCode(byte);
+    });
+    return typeof btoa === 'function'
+        ? btoa(binary)
+        : Buffer.from(binary, 'binary').toString('base64');
+}
+
 function base64UrlToBytes(value) {
     const base64 = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
@@ -258,13 +269,16 @@ export function resolveExternalNodesCallbackSecret(env = {}) {
     return env?.CALLBACK_TOKEN_SECRET || env?.COOKIE_SECRET || '';
 }
 
-export function buildExternalNodesCallbackUrl(requestUrl, token) {
+export function buildExternalNodesCallbackUrl(requestUrl, token, { encoding } = {}) {
     const callbackUrl = new URL('/api/external-nodes-callback', requestUrl);
     callbackUrl.searchParams.set('token', token);
+    if (encoding) {
+        callbackUrl.searchParams.set('encoding', encoding);
+    }
     return callbackUrl.toString();
 }
 
-export async function prepareExternalNodesCallback({ env = {}, requestUrl, profileId = 'default', nodesText = '', ttlSeconds = DEFAULT_EXTERNAL_NODES_TTL_SECONDS } = {}) {
+export async function prepareExternalNodesCallback({ env = {}, requestUrl, profileId = 'default', nodesText = '', ttlSeconds = DEFAULT_EXTERNAL_NODES_TTL_SECONDS, encoding } = {}) {
     const secret = resolveExternalNodesCallbackSecret(env);
     const stored = await putExternalNodes({ env, profileId, nodesText, ttlSeconds });
     const token = await createExternalNodesToken({
@@ -276,7 +290,7 @@ export async function prepareExternalNodesCallback({ env = {}, requestUrl, profi
     return {
         ...stored,
         token,
-        callbackUrl: buildExternalNodesCallbackUrl(requestUrl, token)
+        callbackUrl: buildExternalNodesCallbackUrl(requestUrl, token, { encoding })
     };
 }
 
@@ -301,11 +315,18 @@ export async function handleExternalNodesCallbackRequest(request, env = {}) {
         return new Response('External nodes callback cache expired or missing', { status: 410 });
     }
 
-    return new Response(nodesText, {
-        headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'no-store, no-cache',
-            'X-MiSub-Mode': 'external-nodes-callback'
-        }
+    const encoding = (url.searchParams.get('encoding') || '').toLowerCase();
+    const responseText = encoding === 'base64' ? encodeUtf8Base64(nodesText) : nodesText;
+    const headers = {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache',
+        'X-MiSub-Mode': 'external-nodes-callback'
+    };
+    if (encoding === 'base64') {
+        headers['X-MiSub-Callback-Encoding'] = 'base64';
+    }
+
+    return new Response(responseText, {
+        headers
     });
 }

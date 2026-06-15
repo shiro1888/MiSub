@@ -813,7 +813,8 @@ export async function handleMisubRequest(context) {
                 env,
                 requestUrl: request.url,
                 profileId: callbackProfileId,
-                nodesText: externalNodeList
+                nodesText: externalNodeList,
+                encoding: 'base64'
             });
             externalUrl = buildExternalSubconverterUrl({
                 backend,

@@ -189,6 +189,7 @@ describe('handleMisubRequest regression coverage', () => {
             expect(redirectUrl.searchParams.get('target')).toBe('clash');
             expect(callbackUrl.origin + callbackUrl.pathname).toBe('https://misub.example/api/external-nodes-callback');
             expect(callbackUrl.searchParams.get('token')).toBeTruthy();
+            expect(callbackUrl.searchParams.get('encoding')).toBe('base64');
             expect(redirectUrl.searchParams.get('url')).not.toContain('trojan://pass0@example.com');
             const externalNodeCacheWrites = [...kvWrites.entries()].filter(([key]) => key.startsWith('tmp_external_nodes:'));
             expect(externalNodeCacheWrites).toHaveLength(1);
