@@ -76,5 +76,13 @@ const props = defineProps({
       </div>
       <Switch v-model="editingSubscription.plusAsSpace" />
     </div>
+
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('subscriptions.excludeTrafficTitle') }}</span>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('subscriptions.excludeTrafficDesc') }}</p>
+      </div>
+      <Switch v-model="editingSubscription.excludeTraffic" />
+    </div>
   </div>
 </template>

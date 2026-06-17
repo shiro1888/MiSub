@@ -49,6 +49,7 @@ const trafficStats = computed(() => {
     let totalUsed = 0;
     let totalMax = 0;
     (subscriptions.value || []).forEach(sub => {
+        if (sub.excludeTraffic) return;
         if (sub.userInfo) {
             totalUsed += (sub.userInfo.upload || 0) + (sub.userInfo.download || 0);
             totalMax += (sub.userInfo.total || 0);

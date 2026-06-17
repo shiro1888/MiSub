@@ -22,6 +22,7 @@ export function useSubscriptionForms({ addSubscription, updateSubscription }) {
             fetchProxy: '',
             enableNodeCache: false,
             plusAsSpace: false,
+            excludeTraffic: false,
             website: '',
             notes: ''
         };

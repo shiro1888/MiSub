@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS = {
     builtinLoonSkipCertVerify: false,
     enableAccessLog: false,
     accessLogPersistenceMode: 'light',
+    mergeExpireStrategy: 'max',
     NotifyThresholdDays: 3,
     NotifyThresholdPercent: 90,
     enableTrafficNode: false,

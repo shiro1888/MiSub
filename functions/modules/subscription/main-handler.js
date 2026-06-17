@@ -106,15 +106,34 @@ function getCurrentRequestUserInfo(context, sub) {
 }
 
 function buildUserInfoHeaderFromSubscriptions(context, subscriptions) {
+    const strategy = context?.config?.mergeExpireStrategy || 'max';
     const totalUserInfo = subscriptions.reduce((acc, sub) => {
         const userInfo = sub?.enabled ? getCurrentRequestUserInfo(context, sub) : null;
         if (!userInfo) return acc;
+
+        let nextExpire = acc.expire;
+        if (userInfo.expire > 0) {
+            if (acc.expire === 0) {
+                nextExpire = userInfo.expire;
+            } else {
+                nextExpire = strategy === 'min'
+                    ? Math.min(acc.expire, userInfo.expire)
+                    : Math.max(acc.expire, userInfo.expire);
+            }
+        }
+
+        if (sub?.excludeTraffic) {
+            return {
+                ...acc,
+                expire: nextExpire
+            };
+        }
 
         return {
             upload: (acc.upload || 0) + (userInfo.upload || 0),
             download: (acc.download || 0) + (userInfo.download || 0),
             total: (acc.total || 0) + (userInfo.total || 0),
-            expire: Math.max(acc.expire || 0, userInfo.expire || 0)
+            expire: nextExpire
         };
     }, { upload: 0, download: 0, total: 0, expire: 0 });
 
@@ -378,6 +397,7 @@ export async function handleMisubRequest(context) {
     }
     // 关键：我们在这里定义了 `config`，后续都应该使用它
     const config = migrateConfigSettings({ ...defaultSettings, ...settings });
+    context.config = config;
     context.accessLogPersistenceMode = config.accessLogPersistenceMode || 'light';
 
     // [Subconverter API] 提取 URL 控制参数，用于覆盖默认设置

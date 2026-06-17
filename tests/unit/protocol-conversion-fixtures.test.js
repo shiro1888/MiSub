@@ -329,6 +329,7 @@ describe('protocol conversion fixtures', () => {
                     sni: 'anytls-sni.example.com',
                     alpn: ['h2', 'http/1.1'],
                     'skip-cert-verify': true,
+                    pinnedPeerCertSha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                     padding: true
                 },
                 expected: {
@@ -341,6 +342,7 @@ describe('protocol conversion fixtures', () => {
                     sni: 'anytls-sni.example.com',
                     alpn: ['h2', 'http/1.1'],
                     'skip-cert-verify': true,
+                    pinnedPeerCertSha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                     udp: true
                 }
             },
@@ -444,6 +446,20 @@ describe('protocol conversion fixtures', () => {
                     servername: 'socks-sni.example.com',
                     sni: 'socks-sni.example.com',
                     'skip-cert-verify': true
+                }
+            },
+            {
+                url: 'anytls://anytls-parse-pass@anytls-parse.example.com:443?sni=anytls-sni.example.com&pinnedPeerCertSha256=abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789#Fixture%20AnyTLS%20Pinned',
+                expected: {
+                    name: 'Fixture AnyTLS Pinned',
+                    type: 'anytls',
+                    server: 'anytls-parse.example.com',
+                    port: 443,
+                    password: 'anytls-parse-pass',
+                    servername: 'anytls-sni.example.com',
+                    sni: 'anytls-sni.example.com',
+                    pinnedPeerCertSha256: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+                    udp: true
                 }
             }
         ];

@@ -65,6 +65,7 @@ const markDirty = () => {
 // --- UI State ---
 const isSortingSubs = ref(false);
 const isSortingNodes = ref(false);
+const isSortingProfiles = ref(false);
 const manualNodeViewMode = ref('card');
 const showQRCodeModal = ref(false);
 const qrCodeUrl = ref('');
@@ -118,7 +119,8 @@ const {
   changeManualNodesPage, addNode, updateNode, deleteNode, deleteAllNodes,
   addNodesFromBulk, autoSortNodes, deduplicateNodes,
   reorderManualNodes, activeGroupFilter, setGroupFilter, batchUpdateGroup, batchDeleteNodes, buildDedupPlan, applyDedupPlan,
-  manualNodeGroups, renameGroup, deleteGroup, reorderGroups // Added group helpers
+  manualNodeGroups, renameGroup, deleteGroup, reorderGroups, // Added group helpers
+  pingResults, pingingNodes, pingNodeId, pingAllNodes
 } = useManualNodes(markDirty);
 
 const handleSearchTermUpdate = (val) => {
@@ -436,6 +438,7 @@ import SavePrompt from '../../ui/SavePrompt.vue';
         <ManualNodePanel :manual-nodes="manualNodes" :paginated-manual-nodes="paginatedManualNodes"
           :current-page="manualNodesCurrentPage" :total-pages="manualNodesTotalPages" :is-sorting="isSortingNodes"
           :search-term="searchTerm" :view-mode="manualNodeViewMode" :active-group-filter="activeGroupFilter"
+          :ping-results="pingResults" :pinging-nodes="pingingNodes"
           :groups="manualNodeGroups"
           :compact-grid="true"
           @add="handleAddNode" @delete="handleDeleteNodeWithCleanup"
@@ -448,16 +451,16 @@ import SavePrompt from '../../ui/SavePrompt.vue';
           @batch-delete-nodes="handleBatchDeleteRequest" 
           @rename-group="renameGroup" @delete-group="deleteGroup"
           @open-batch-group-modal="handleOpenBatchGroupModal"
-          @manage-groups="handleOpenGroupManagement" />
+          @manage-groups="handleOpenGroupManagement" @ping="pingNodeId" @ping-all="pingAllNodes" />
       </div>
 
       <!-- Right Column -->
       <div class="space-y-6 lg:space-y-7 xl:col-span-1">
         <RightPanel :config="config" :profiles="profiles" :compact="true" @qrcode="(url, title) => { qrCodeUrl = url; qrCodeTitle = title; showQRCodeModal = true; }" />
-        <ProfilePanel :profiles="profiles" :compact="true" @add="handleAddProfile" @edit="handleEditProfile"
+        <ProfilePanel :profiles="profiles" :compact="true" :is-sorting="isSortingProfiles" @add="handleAddProfile" @edit="handleEditProfile"
           @delete="handleDeleteProfile" @deleteAll="showDeleteProfilesModal = true" @toggle="handleProfileToggle"
           @open-copy="handleOpenCopy" @copyLink="copyProfileLink" @copyClashLink="copyClashLink" @preview="handlePreviewProfile" @viewLogs="handleViewLogs" @reorder="handleProfileReorder" 
-          @qrcode="(id) => handleQRCode(id, 'profile')" />
+          @qrcode="(id) => handleQRCode(id, 'profile')" @toggle-sort="isSortingProfiles = !isSortingProfiles" />
       </div>
     </div>
   </div>

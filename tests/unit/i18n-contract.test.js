@@ -34,6 +34,13 @@ describe('MiSub i18n contract', () => {
     expect(t('missing.translation.key', {}, 'en-US')).toBe('missing.translation.key');
   });
 
+  it('translates dashboard header strings used by the traditional dashboard', () => {
+    expect(t('dashboard.totalRemainingTraffic', { traffic: '12 GB' }, 'zh-CN')).toBe('剩余总流量: 12 GB');
+    expect(t('dashboard.dashboardHint', {}, 'zh-CN')).not.toBe('dashboard.dashboardHint');
+    expect(t('dashboard.totalRemainingTraffic', { traffic: '12 GB' }, 'en-US')).toBe('Remaining traffic: 12 GB');
+    expect(t('dashboard.dashboardHint', {}, 'en-US')).not.toBe('dashboard.dashboardHint');
+  });
+
   it('detects locale from persisted preference before browser language', () => {
     localStorage.setItem('misub:locale', 'en-US');
     expect(detectInitialLocale(['zh-CN'])).toBe('en-US');

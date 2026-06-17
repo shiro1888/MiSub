@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, onUnmounted, computed } from 'vue';
 import { useI18n } from '@/i18n/index.js';
+import { useBackdropDismiss } from '@/composables/useBackdropDismiss.js';
 
 const props = defineProps({
   show: Boolean,
@@ -116,12 +117,17 @@ const handleConfirm = async () => {
     emit('update:show', false);
   }
 };
+
+const {
+  handleBackdropPointerDown,
+  handleBackdropClick
+} = useBackdropDismiss(() => emit('update:show', false));
 </script>
 
 <template>
   <Transition name="modal-fade">
     <div v-if="show" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
-      @click="emit('update:show', false)" role="dialog" aria-modal="true" :aria-labelledby="titleId">
+      @pointerdown.capture="handleBackdropPointerDown" @click="handleBackdropClick" role="dialog" aria-modal="true" :aria-labelledby="titleId">
       <Transition name="modal-inner">
         <div v-if="show"
           ref="modalPanelRef"

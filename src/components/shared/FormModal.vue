@@ -6,6 +6,7 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue';
 import { t } from '../../i18n/index.js';
+import { useBackdropDismiss } from '../../composables/useBackdropDismiss.js';
 
 const props = defineProps({
   show: {
@@ -131,11 +132,13 @@ const handleClose = () => {
 };
 
 // 处理遮罩点击
-const handleMaskClick = () => {
-  if (props.maskClosable && !props.disabled && !props.loading) {
-    handleClose();
-  }
-};
+const {
+  handleBackdropPointerDown: handleMaskPointerDown,
+  handleBackdropClick: handleMaskClick
+} = useBackdropDismiss(
+  handleClose,
+  () => props.maskClosable && !props.disabled && !props.loading
+);
 
 // 处理确认
 const handleConfirm = () => {
@@ -195,6 +198,7 @@ defineExpose({
       <div
         class="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
         :class="{ 'bg-black/60 backdrop-blur-sm': show }"
+        @pointerdown.capture="handleMaskPointerDown"
         @click="handleMaskClick"
       >
         <!-- 模态框 -->

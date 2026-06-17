@@ -1033,6 +1033,11 @@ function parseAnytlsUrl(url) {
         
         if (params.get('alpn')) proxy.alpn = params.get('alpn').split(',');
         if (params.get('insecure') === '1' || params.get('allowInsecure') === '1') proxy['skip-cert-verify'] = true;
+        const pinnedPeerCertSha256 = params.get('pinnedPeerCertSha256')
+            || params.get('pinned-peer-cert-sha256')
+            || params.get('peer-cert-sha256')
+            || params.get('certSha256');
+        if (pinnedPeerCertSha256) proxy.pinnedPeerCertSha256 = pinnedPeerCertSha256;
 
         proxy.udp = true;
         return proxy;

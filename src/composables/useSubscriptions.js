@@ -29,6 +29,7 @@ export function useSubscriptions(markDirty) {
   const totalRemainingTraffic = computed(() => {
     const REASONABLE_TRAFFIC_LIMIT_BYTES = 10 * 1024 * 1024 * 1024 * 1024 * 1024; // 10 PB in bytes
     return subscriptions.value.reduce((acc, sub) => {
+      if (sub.excludeTraffic) return acc;
       if (
         sub.enabled &&
         sub.userInfo &&
