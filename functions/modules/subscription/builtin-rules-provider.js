@@ -8,6 +8,7 @@ export const DEFAULT_RELAY_GROUP = '🌍 总出口';
 export const AUTO_SELECT_GROUP = '♻️ 自动选择';
 export const FALLBACK_GROUP = '🔯 故障转移';
 export const MANUAL_SELECT_GROUP = '👋 手动切换';
+export const US_REGION_GROUP = '🇺🇸 美国节点';
 
 /**
  * 自动生成地区策略组（通用中间格式）
@@ -100,6 +101,24 @@ function _generateRegionGroups(proxies) {
     return { regionSelectGroups, regionSupportGroups, regionNames };
 }
 
+function withPreferredRegionFirst(regionNames = [], preferred = US_REGION_GROUP) {
+    const uniqueRegions = Array.from(new Set(regionNames.filter(Boolean)));
+    return [
+        ...uniqueRegions.filter(name => name === preferred),
+        ...uniqueRegions.filter(name => name !== preferred)
+    ];
+}
+
+function buildPrimarySelectorMembers(regionNames = [], { includeFallback = true } = {}) {
+    return [
+        ...withPreferredRegionFirst(regionNames),
+        AUTO_SELECT_GROUP,
+        ...(includeFallback ? [FALLBACK_GROUP] : []),
+        MANUAL_SELECT_GROUP,
+        'DIRECT'
+    ];
+}
+
 /**
  * 策略组工厂
  */
@@ -120,7 +139,7 @@ export const POLICY_GROUPS = {
         const { regionSelectGroups, regionSupportGroups, regionNames } = _generateRegionGroups(proxies);
         
         return [
-            { name: DEFAULT_SELECT_GROUP, type: 'select', proxies: [AUTO_SELECT_GROUP, FALLBACK_GROUP, MANUAL_SELECT_GROUP, ...regionNames, 'DIRECT'] },
+            { name: DEFAULT_SELECT_GROUP, type: 'select', proxies: buildPrimarySelectorMembers(regionNames) },
             { name: AUTO_SELECT_GROUP, type: 'url-test', proxies: proxyNames },
             { name: FALLBACK_GROUP, type: 'fallback', proxies: proxyNames },
             { name: MANUAL_SELECT_GROUP, type: 'select', proxies: proxyNames },
@@ -140,7 +159,7 @@ export const POLICY_GROUPS = {
         const { regionSelectGroups, regionSupportGroups, regionNames } = _generateRegionGroups(proxies);
         
         return [
-            { name: DEFAULT_SELECT_GROUP, type: 'select', proxies: [AUTO_SELECT_GROUP, FALLBACK_GROUP, MANUAL_SELECT_GROUP, ...regionNames, 'DIRECT'] },
+            { name: DEFAULT_SELECT_GROUP, type: 'select', proxies: buildPrimarySelectorMembers(regionNames) },
             { name: AUTO_SELECT_GROUP, type: 'url-test', proxies: proxyNames },
             { name: FALLBACK_GROUP, type: 'fallback', proxies: proxyNames },
             { name: MANUAL_SELECT_GROUP, type: 'select', proxies: proxyNames },
@@ -163,13 +182,13 @@ export const POLICY_GROUPS = {
         const { regionSelectGroups, regionSupportGroups, regionNames } = _generateRegionGroups(proxies);
         
         return [
-            { name: DEFAULT_RELAY_GROUP, type: 'select', proxies: ['🔗 链式代理', AUTO_SELECT_GROUP, MANUAL_SELECT_GROUP, '🚀 常用节点', ...regionNames, 'DIRECT'] },
+            { name: DEFAULT_RELAY_GROUP, type: 'select', proxies: [...withPreferredRegionFirst(regionNames), '🔗 链式代理', AUTO_SELECT_GROUP, MANUAL_SELECT_GROUP, '🚀 常用节点', 'DIRECT'] },
             // 保持 provider 层为通用 select，不在抽象层输出 relay 语义。
             // 否则模板渲染/普通 Clash 路径可能把它转换成 Mihomo 专属 dialer-proxy，导致客户端拉取失败。
             { name: '🔗 链式代理', type: 'select', proxies: ['入口节点', AUTO_SELECT_GROUP, MANUAL_SELECT_GROUP, 'DIRECT', ...proxyNames] },
             { name: '入口节点', type: 'select', proxies: [AUTO_SELECT_GROUP, MANUAL_SELECT_GROUP, 'DIRECT', ...proxyNames] },
             ...regionSelectGroups,
-            { name: '🚀 常用节点', type: 'select', proxies: [AUTO_SELECT_GROUP, FALLBACK_GROUP, MANUAL_SELECT_GROUP, ...regionNames, 'DIRECT'] },
+            { name: '🚀 常用节点', type: 'select', proxies: buildPrimarySelectorMembers(regionNames) },
             { name: AUTO_SELECT_GROUP, type: 'url-test', proxies: proxyNames },
             { name: FALLBACK_GROUP, type: 'fallback', proxies: proxyNames },
             { name: MANUAL_SELECT_GROUP, type: 'select', proxies: proxyNames },

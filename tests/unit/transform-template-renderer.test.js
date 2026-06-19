@@ -41,11 +41,15 @@ describe('Transform template renderer', () => {
     it('should build region aware context', () => {
         const context = buildTransformTemplateContext({
             fileName: 'Demo',
-            regionGroups: [{ name: '🇯🇵 日本节点', tags: ['JP-1', 'JP-2'] }],
+            regionGroups: [
+                { name: '🇯🇵 日本节点', tags: ['JP-1', 'JP-2'] },
+                { name: '🇺🇸 美国节点', tags: ['US-1'] }
+            ],
             protocolGroups: [{ name: 'Trojan 节点', lines: ['trojan://a', 'trojan://b'] }]
         });
 
         expect(context.regionGroupNames).toContain('🇯🇵 日本节点');
+        expect(context.regionGroupNames).toContain('🇺🇸 美国节点');
         expect(context.regionGroups).toContain('JP-1');
         expect(context.regionGroupCounts).toContain('🇯🇵 日本节点:2');
         expect(context.regionGroupList).toContain('🇯🇵 日本节点(2)');
@@ -54,7 +58,9 @@ describe('Transform template renderer', () => {
         expect(context.protocolGroupCounts).toContain('Trojan 节点:2');
         expect(context.protocolGroupList).toContain('Trojan 节点(2)');
         expect(context.primaryStrategyChain).toContain('🚀 节点选择');
+        expect(context.primaryStrategyChain.indexOf('🇺🇸 美国节点')).toBeLessThan(context.primaryStrategyChain.indexOf('🇯🇵 日本节点'));
         expect(context.regionStrategyChain).toContain('🇯🇵 日本节点');
+        expect(context.regionStrategyChain.indexOf('🇺🇸 美国节点')).toBeLessThan(context.regionStrategyChain.indexOf('🇯🇵 日本节点'));
         expect(context.protocolStrategyChain).toContain('Trojan 节点');
         expect(context.allStrategyGroups).toContain('DIRECT');
     });

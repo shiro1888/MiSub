@@ -275,7 +275,8 @@ describe('Surge 内置生成器', () => {
             expect(result).toContain('⚡️ 🇺🇸 美国 - 自动测速 = url-test');
             
             // 主分组应包含地区分组和默认策略
-            expect(result).toContain('🚀 节点选择 = select, ♻️ 自动选择, 🔯 故障转移, 👋 手动切换, 🇭🇰 香港节点, 🇺🇸 美国节点');
+            expect(result).toContain('🚀 节点选择 = select, 🇺🇸 美国节点, 🇭🇰 香港节点');
+            expect(result.indexOf('🇺🇸 美国节点')).toBeLessThan(result.indexOf('♻️ 自动选择'));
         });
     });
 

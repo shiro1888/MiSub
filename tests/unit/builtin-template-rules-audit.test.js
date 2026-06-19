@@ -42,6 +42,7 @@ describe('Builtin template rule audit', () => {
         const model = getOptimizedTemplateModel('clash_misub_minimal');
         const mainGroup = findGroup(model, '🚀 节点选择');
 
+        expect(mainGroup?.members[0]).toBe('🇺🇸 美国节点');
         expect(mainGroup?.members).toContain('☑️ 手动切换');
         expect(mainGroup?.members).not.toContain('☑ * 手动切换');
         expect(findGroup(model, '☑️ 手动切换')).toBeTruthy();
