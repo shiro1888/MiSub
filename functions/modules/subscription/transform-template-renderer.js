@@ -51,12 +51,10 @@ export function buildTransformTemplateContext({ proxies = '', rules = '', fileNa
     const normalizedRegionGroups = Array.isArray(regionGroups) ? regionGroups : [];
     const normalizedProtocolGroups = Array.isArray(protocolGroups) ? protocolGroups : [];
     const regionNames = normalizedRegionGroups.map(group => group.name).filter(Boolean);
-    const preferredRegionNames = [
-        ...regionNames.filter(name => name === '🇺🇸 美国节点'),
-        ...regionNames.filter(name => name !== '🇺🇸 美国节点')
-    ];
+    const preferredRegionNames = regionNames.filter(name => name === '🇺🇸 美国节点');
+    const otherRegionNames = regionNames.filter(name => name !== '🇺🇸 美国节点');
     const protocolNames = normalizedProtocolGroups.map(group => group.name).filter(Boolean);
-    const primaryStrategyChain = ['🚀 节点选择', ...preferredRegionNames, '♻️ 自动选择', ...protocolNames, '☑️ 手动切换', 'DIRECT'].join(', ');
+    const primaryStrategyChain = ['🚀 节点选择', ...preferredRegionNames, '♻️ 自动选择', ...otherRegionNames, ...protocolNames, '☑️ 手动切换', 'DIRECT'].join(', ');
     return {
         proxies,
         rules,
@@ -74,7 +72,7 @@ export function buildTransformTemplateContext({ proxies = '', rules = '', fileNa
         protocolGroupCounts: normalizedProtocolGroups.map(group => `${group.name}:${group.count ?? (group.lines?.length || 0)}`).join(', '),
         protocolGroupList: normalizedProtocolGroups.map(group => `${group.name}(${group.count ?? (group.lines?.length || 0)})`).join('\n'),
         primaryStrategyChain,
-        regionStrategyChain: preferredRegionNames.join(', '),
+        regionStrategyChain: [...preferredRegionNames, ...otherRegionNames].join(', '),
         protocolStrategyChain: protocolNames.join(', '),
         allStrategyGroups: [...new Set(['🚀 节点选择', '♻️ 自动选择', ...regionNames, ...protocolNames, '☑️ 手动切换', 'DIRECT'])].join(', ')
     };

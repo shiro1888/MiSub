@@ -59,6 +59,7 @@ describe('Transform template renderer', () => {
         expect(context.protocolGroupList).toContain('Trojan 节点(2)');
         expect(context.primaryStrategyChain).toContain('🚀 节点选择');
         expect(context.primaryStrategyChain.indexOf('🇺🇸 美国节点')).toBeLessThan(context.primaryStrategyChain.indexOf('🇯🇵 日本节点'));
+        expect(context.primaryStrategyChain.indexOf('♻️ 自动选择')).toBeLessThan(context.primaryStrategyChain.indexOf('🇯🇵 日本节点'));
         expect(context.regionStrategyChain).toContain('🇯🇵 日本节点');
         expect(context.regionStrategyChain.indexOf('🇺🇸 美国节点')).toBeLessThan(context.regionStrategyChain.indexOf('🇯🇵 日本节点'));
         expect(context.protocolStrategyChain).toContain('Trojan 节点');

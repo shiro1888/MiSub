@@ -110,11 +110,16 @@ function withPreferredRegionFirst(regionNames = [], preferred = US_REGION_GROUP)
 }
 
 function buildPrimarySelectorMembers(regionNames = [], { includeFallback = true } = {}) {
+    const uniqueRegions = Array.from(new Set(regionNames.filter(Boolean)));
+    const preferredRegions = uniqueRegions.filter(name => name === US_REGION_GROUP);
+    const otherRegions = uniqueRegions.filter(name => name !== US_REGION_GROUP);
+
     return [
-        ...withPreferredRegionFirst(regionNames),
+        ...preferredRegions,
         AUTO_SELECT_GROUP,
         ...(includeFallback ? [FALLBACK_GROUP] : []),
         MANUAL_SELECT_GROUP,
+        ...otherRegions,
         'DIRECT'
     ];
 }
