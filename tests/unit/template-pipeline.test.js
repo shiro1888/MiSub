@@ -88,7 +88,8 @@ MATCH,🔗 链式代理
         const parsed = yaml.load(rendered);
         const relayLikeGroup = parsed['proxy-groups'].find(group => group.name === '🔗 链式代理');
         expect(relayLikeGroup.type).toBe('select');
-        expect(relayLikeGroup.proxies).toEqual(['入口节点', 'HK-01', 'DIRECT']);
+        expect(relayLikeGroup.proxies).toEqual(['入口节点', 'HK-01']);
+        expect(relayLikeGroup.proxies).not.toContain('DIRECT');
         expect(relayLikeGroup['dialer-proxy']).toBeUndefined();
     });
 
@@ -113,7 +114,7 @@ MATCH,节点选择
         expect(selectGroups).toHaveLength(1);
         expect(selectGroups[0].proxies).toContain('HK-01');
         expect(selectGroups[0].proxies).toContain('JP-01');
-        expect(selectGroups[0].proxies).toContain('DIRECT');
+        expect(selectGroups[0].proxies).not.toContain('DIRECT');
     });
 
     it('should parse builtin ACL4SSR custom template registry entry', () => {
@@ -434,8 +435,10 @@ custom_proxy_group=🚀 节点选择\`select\`[]DIRECT\`.*
         expect(providerUrls).not.toContain('https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/BanAD.yaml');
         expect(localAreaProvider).toMatchObject({ behavior: 'classical', format: 'text', path: './ruleset/localareanetwork_0.list' });
         expect(banAdProvider).toMatchObject({ behavior: 'classical', format: 'text', path: './ruleset/banad_1.list' });
-        expect(parsed.rules).toContain('RULE-SET,localareanetwork_0,🎯 全球直连');
-        expect(parsed.rules).toContain('RULE-SET,banad_1,🛑 广告拦截');
+        expect(parsed.rules).toContain('RULE-SET,localareanetwork_0,🚀 节点选择');
+        expect(parsed.rules).toContain('RULE-SET,banad_1,🚀 节点选择');
+        expect(parsed['proxy-groups'].some(group => group.name === '🎯 全球直连')).toBe(false);
+        expect(parsed['proxy-groups'].some(group => group.name === '🛑 广告拦截')).toBe(false);
     });
 
     it('maps ACL4SSR root IP lists to matching ipcidr provider YAML files', () => {

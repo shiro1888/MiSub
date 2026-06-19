@@ -1,6 +1,11 @@
 import yaml from 'js-yaml';
 import { clashFix } from '../../../utils/format-utils.js';
 import { normalizeUnifiedTemplateModel } from '../template-model.js';
+import {
+    getClashPolicyFallback,
+    sanitizeClashPolicy,
+    sanitizeClashProxyGroups
+} from '../clash-policy-sanitizer.js';
 
 function mapGroupType(type) {
     const normalized = String(type || '').trim().toLowerCase();
@@ -8,15 +13,6 @@ function mapGroupType(type) {
         return normalized;
     }
     return 'select';
-}
-
-function filterAutoSelectMembers(group) {
-    const type = mapGroupType(group.type);
-    const members = Array.isArray(group.members) ? group.members.filter(Boolean) : [];
-    if (!['url-test', 'fallback', 'load-balance'].includes(type)) {
-        return members;
-    }
-    return members.filter(member => !['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'].includes(String(member).toUpperCase()));
 }
 
 const ACL4SSR_ROOT_PROVIDER_FILES = new Set([
@@ -158,6 +154,23 @@ export function renderClashFromTemplateModel(model) {
         };
     });
 
+    const rawProxyGroups = normalizedModel.groups
+        .filter(group =>
+            (Array.isArray(group.members) && group.members.length > 0) ||
+            (Array.isArray(group.filters) && group.filters.length > 0)
+        )
+        .map(group => {
+            return {
+                name: group.name,
+                type: mapGroupType(group.type),
+                proxies: Array.isArray(group.members) ? group.members.filter(Boolean) : [],
+                filter: Array.isArray(group.filters) && group.filters.length > 0 ? group.filters.join('|') : undefined,
+                ...group.options
+            };
+        });
+    const proxyGroups = sanitizeClashProxyGroups(rawProxyGroups, normalizedModel.proxies);
+    const fallbackPolicy = getClashPolicyFallback(proxyGroups, normalizedModel.proxies);
+
     const config = {
         'mixed-port': 7890,
         'allow-lan': true,
@@ -177,26 +190,17 @@ export function renderClashFromTemplateModel(model) {
             ]
         },
         'proxies': normalizedModel.proxies,
-        'proxy-groups': normalizedModel.groups
-            .filter(group =>
-                (Array.isArray(group.members) && group.members.length > 0) ||
-                (Array.isArray(group.filters) && group.filters.length > 0)
-            )
-            .map(group => {
-                return {
-                    name: group.name,
-                    type: mapGroupType(group.type),
-                    proxies: filterAutoSelectMembers(group),
-                    filter: Array.isArray(group.filters) && group.filters.length > 0 ? group.filters.join('|') : undefined,
-                    ...group.options
-                };
-            }),
+        'proxy-groups': proxyGroups,
         'rule-providers': Object.keys(ruleProviders).length > 0 ? ruleProviders : undefined,
         'rules': normalizedModel.rules.map(rule => {
+            const sanitizedRule = {
+                ...rule,
+                policy: sanitizeClashPolicy(rule.policy, fallbackPolicy)
+            };
             if (String(rule.type || '').toUpperCase() !== 'RULE-SET' || !rule.value) {
-                return mapRule(rule, ruleProviderMap);
+                return mapRule(sanitizedRule, ruleProviderMap);
             }
-            return mapRule({ ...rule, value: toClashRuleProviderUrl(rule.value) }, ruleProviderMap);
+            return mapRule({ ...sanitizedRule, value: toClashRuleProviderUrl(rule.value) }, ruleProviderMap);
         }).filter(Boolean),
         'profile': {
             'store-selected': true,

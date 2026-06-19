@@ -16,6 +16,11 @@ import {
     DEFAULT_RELAY_GROUP,
     pruneProxyGroups
 } from './builtin-rules-provider.js';
+import {
+    getClashPolicyFallback,
+    sanitizeClashPolicy,
+    sanitizeClashProxyGroups
+} from './clash-policy-sanitizer.js';
 import yaml from 'js-yaml';
 
 /**
@@ -176,6 +181,8 @@ export function generateBuiltinClashConfig(nodeList, options = {}) {
         const policyGroupsFactory = POLICY_GROUPS[levelKey] || POLICY_GROUPS.STD;
         let proxyGroups = policyGroupsFactory(proxies);
         proxyGroups = pruneProxyGroups(proxyGroups, proxies);
+        proxyGroups = sanitizeClashProxyGroups(proxyGroups, proxies);
+        const fallbackPolicy = getClashPolicyFallback(proxyGroups, proxies);
         
         // 提取远程 Provider 定义。Hiddify 4.x 的 Clash 转 sing-box 解析对 rule-providers 兼容性较差，
         // 自动识别为 Hiddify 时降级为纯 MATCH 规则，避免导入时报 unable to determine config format。
@@ -183,8 +190,19 @@ export function generateBuiltinClashConfig(nodeList, options = {}) {
 
         // 转换规则行为最终字符串
         const clashRules = rawRules.map(r => {
-            if (typeof r === 'string') return r;
-            if (r.type === 'rule-provider') return `RULE-SET,${r.provider},${r.target}`;
+            if (typeof r === 'string') {
+                const parts = r.split(',').map(part => part.trim());
+                const ruleType = String(parts[0] || '').toUpperCase();
+                const policyIndex = (ruleType === 'MATCH' || ruleType === 'FINAL') ? 1 : 2;
+                if (parts.length > policyIndex) {
+                    parts[policyIndex] = sanitizeClashPolicy(parts[policyIndex], fallbackPolicy);
+                    return parts.join(',');
+                }
+                return r;
+            }
+            if (r.type === 'rule-provider') {
+                return `RULE-SET,${r.provider},${sanitizeClashPolicy(r.target, fallbackPolicy)}`;
+            }
             return null;
         }).filter(Boolean);
 

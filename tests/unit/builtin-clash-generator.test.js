@@ -46,6 +46,17 @@ describe('Clash 内置生成器', () => {
         expect(proxiesOnly.proxies[0]).not.toHaveProperty('metadata');
     });
 
+    it('不应在 Clash 策略组或规则里输出 DIRECT 和 REJECT', () => {
+        const node = 'trojan://password@1.2.3.4:443#US-Test';
+        const fullConfig = yaml.load(generateBuiltinClashConfig(node, { ruleLevel: 'full' }));
+
+        const groupMembers = fullConfig['proxy-groups'].flatMap(group => group.proxies || []);
+        expect(groupMembers).not.toContain('DIRECT');
+        expect(groupMembers).not.toContain('REJECT');
+        expect(fullConfig.rules.some(rule => /(^|,)DIRECT(,|$)/.test(rule))).toBe(false);
+        expect(fullConfig.rules.some(rule => /(^|,)REJECT(,|$)/.test(rule))).toBe(false);
+    });
+
     it('应将 TUIC URL 的 congestion_control 转为 Clash/Mihomo 兼容字段', () => {
         const node = 'tuic://uuid-tuic:pass-tuic@tuic.example.com:443?sni=tuic.example.com&congestion_control=bbr&udp_relay_mode=native&alpn=h3&allow_insecure=1#TUICNode';
 
