@@ -6,6 +6,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'happy-dom',
+        setupFiles: ['./tests/setup-browser-storage.js'],
         passWithNoTests: true,
         include: ['tests/**/*.{test,spec}.{js,ts}'],
         coverage: {
