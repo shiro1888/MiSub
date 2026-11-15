@@ -1,16 +1,10 @@
-name: Deploy prod-misub Pages
+name: Manual deploy prod-misub Pages
+
+# push 自动部署由 Cloudflare Pages Git 集成完成(2026-11-15 已验证生效)。
+# 本 workflow 仅作为手动补部署通道(workflow_dispatch),避免与 Git 集成双重部署。
+# Cloudflare Pages 项目真实名称: prod-misub
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'functions/**'
-      - 'public/**'
-      - 'index.html'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
 jobs:
